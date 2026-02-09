@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	vault         = "~/.tnote/notes"
+	inputBoxStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("120"))
 )
 
 type model struct {
@@ -32,7 +38,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+n":
 			m.isFileInputVisible = true
 			return m, nil
-
+		case "enter":
+			// save the file
+		case "esc":
+			m.isFileInputVisible = false
+			return m, nil
 		}
 	}
 
@@ -65,10 +75,20 @@ func (m model) View() string {
 }
 
 func initializeMode() model {
+	// creating a new directory to save the notes
+	err := os.MkdirAll(vault, 0750)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ti := textinput.New()
-	ti.Placeholder = "Enter the file name"
+	ti.Placeholder = "What would you like to call it?"
 	ti.Focus()
 	ti.CharLimit = 128
+	ti.Width = 30
+	ti.Cursor.Style = inputBoxStyle
+	ti.PromptStyle = inputBoxStyle
+	ti.TextStyle = inputBoxStyle
 
 	return model{
 		newFileInput:       ti,
